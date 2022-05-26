@@ -68,20 +68,23 @@ void setup() {
     Serial.begin(2000000);
     Serial.println("startup");
 
-    oled.begin(&Adafruit128x64, I2C_ADDRESS);
-    oled.setFont(CalLite24);
+//    oled.begin(&Adafruit128x64, I2C_ADDRESS);
+//    oled.setFont(CalLite24);
+    i2c.begin();
 
     pinMode(LIGHT_PIN, INPUT);
     pinMode(DATA_PIN, OUTPUT);
     pinMode(SERVO_PIN, OUTPUT);
-    pinMode(BUTTON_PIN , INPUT);
-    digitalWrite(BUTTON_PIN, HIGH);
+    //pinMode(BUTTON_PIN , INPUT);
+    //digitalWrite(BUTTON_PIN, HIGH);
+
+    pinMode(BUTTON_PIN, OUTPUT);
 
     FastLED.addLeds<WS2812B, DATA_PIN, RGB>(leds, NUM_LEDS);
 
-    oled.set2X();
-    oled.clear();
-    oled.print("DEMM");
+//    oled.set2X();
+//    oled.clear();
+//    oled.print("DEMM");
     for (auto & led : leds) {
         led.r = 0;
         led.b = 255;
@@ -97,7 +100,7 @@ void setup() {
 }
 
 void loop() {
-    if (millis() - previousMillis > CYCLE_TIME) {
+    if (1){//millis() - previousMillis > CYCLE_TIME) {
         previousMillis = millis();
         getState();
         Backlighting();
@@ -105,33 +108,33 @@ void loop() {
         SetTacho();
 
     }
-
-    switch (DisplayMode) {
-        case 0:
-            DisplayShuffle();
-            break;
-        case 1:
-            displayVoltage();
-            break;
-        case 2:
-            displayAh();
-            break;
-        case 3:
-            displayCurrent();
-            break;
-        case 4:
-            displayKm();
-            break;
-        case 5:
-            displayKmAbs();
-            break;
-        case 6:
-            displayTemp();
-            break;
-        default:
-            DisplayMode = 0;
-            break;
-    }
+//
+//    switch (DisplayMode) {
+//        case 0:
+//            DisplayShuffle();
+//            break;
+//        case 1:
+//            displayVoltage();
+//            break;
+//        case 2:
+//            displayAh();
+//            break;
+//        case 3:
+//            displayCurrent();
+//            break;
+//        case 4:
+//            displayKm();
+//            break;
+//        case 5:
+//            displayKmAbs();
+//            break;
+//        case 6:
+//            displayTemp();
+//            break;
+//        default:
+//            DisplayMode = 0;
+//            break;
+//    }
 }
 
 
@@ -341,6 +344,7 @@ void getData(){
         Serial.println("bad checksum");
         return;
     }
+    Serial.println(receivedBytes[1]);
 
     vals.Current = receivedBytes[0];
     vals.Km = (float) (receivedBytes[1] + ((uint16_t)receivedBytes[2] << 8))/kmFactor;
