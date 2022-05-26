@@ -24,7 +24,6 @@
 #define SLAVE_ADRESS 8
 #define SHUFFLE_TIME 3500
 #define MAX_KMH 45
-#define MIN_VOLTAGE 4
 
 SSD1306AsciiAvrI2c oled;
 AvrI2c i2c;
