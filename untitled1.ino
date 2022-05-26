@@ -5,7 +5,7 @@
 
 #include <Servo.h>
 #include "FastLED.h"
-#include <Wire.h>
+#include <AvrI2c.h>
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiAvrI2c.h"
 #include <EEPROM.h>
@@ -20,13 +20,14 @@
 
 #define MAX_STATE 6
 #define CYCLE_TIME 30
-#define NUMBER_BYTES 8
+#define NUMBER_BYTES 9
 #define SLAVE_ADRESS 8
 #define SHUFFLE_TIME 3500
 #define MAX_KMH 45
 #define MIN_VOLTAGE 4
 
 SSD1306AsciiAvrI2c oled;
+AvrI2c i2c;
 CRGB leds[NUM_LEDS];
 Servo Tacho;
 
@@ -69,7 +70,6 @@ void setup() {
 
     oled.begin(&Adafruit128x64, I2C_ADDRESS);
     oled.setFont(CalLite24);
-
 
     pinMode(LIGHT_PIN, INPUT);
     pinMode(DATA_PIN, OUTPUT);
@@ -298,34 +298,41 @@ void getData(){
     const int AhFactor = 10;
     const int voltFactor = 100;
     const int kmhFactor = 3;
+    const int kmFactor = 100;
 
 
 
     //extra byte for checksum
-    if(Wire.requestFrom(SLAVE_ADRESS, NUMBER_BYTES+1) < NUMBER_BYTES+1){
-        Serial.println("bad response");
-        return;
-    }
+    i2c.start((SLAVE_ADRESS << 1) | 1);
 
     uint8_t receivedBytes[NUMBER_BYTES];
     uint8_t sum = 0;
     for(auto & received : receivedBytes){
-        received = Wire.read();
+        if(!i2c.read(&received, false)){
+            Serial.println("bad response");
+            return;
+        }
         sum += received;
     }
 
-    uint8_t csum = Wire.read();
+    uint8_t csum;
+    if(!i2c.read(&csum, true)){
+        Serial.println("bad response");
+        return;
+    }
+    i2c.stop();
+
     if(csum != sum){
         Serial.println("bad checksum");
         return;
     }
 
     vals.Current = receivedBytes[0];
-    vals.Km = receivedBytes[1];
-    vals.Ah = (float)receivedBytes[2]/AhFactor;
-    vals.KmAbs = (uint16_t)receivedBytes[3] >> 8 + receivedBytes[4];
-    vals.Voltage = (float)receivedBytes[5]/voltFactor+baseInputVoltage;
-    vals.kmh = (float)receivedBytes[6]/kmhFactor;
-    vals.Temp = receivedBytes[7]+baseMotorTemp;
+    vals.Km = (float) (receivedBytes[1] + ((uint16_t)receivedBytes[2] << 8))/kmFactor;
+    vals.Ah = (float)receivedBytes[3]/AhFactor;
+    vals.KmAbs = (receivedBytes[4] + ((uint16_t)receivedBytes[5] << 8));
+    vals.Voltage = (float)receivedBytes[6]/voltFactor+baseInputVoltage;
+    vals.kmh = (float)receivedBytes[7]/kmhFactor;
+    vals.Temp = receivedBytes[8]+baseMotorTemp;
     vals.timestamp = millis();
 }
