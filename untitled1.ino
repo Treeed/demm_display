@@ -300,15 +300,18 @@ void getData(){
     const int kmhFactor = 3;
     const int kmFactor = 100;
 
-
-
-    //extra byte for checksum
-    i2c.start((SLAVE_ADRESS << 1) | 1);
+    if(!i2c.start((SLAVE_ADRESS << 1) | 1)){
+        i2c.stop();
+        Serial.println("no reaction");
+        return;
+    }
 
     uint8_t receivedBytes[NUMBER_BYTES];
     uint8_t sum = 0;
+
     for(auto & received : receivedBytes){
         if(!i2c.read(&received, false)){
+            i2c.stop();
             Serial.println("bad response");
             return;
         }
@@ -317,6 +320,7 @@ void getData(){
 
     uint8_t csum;
     if(!i2c.read(&csum, true)){
+        i2c.stop();
         Serial.println("bad response");
         return;
     }
