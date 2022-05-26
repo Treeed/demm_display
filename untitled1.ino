@@ -104,33 +104,33 @@ void loop() {
         getData();
         SetTacho();
 
-        switch (DisplayMode) {
-            case 0:
-                DisplayShuffle();
-                break;
-            case 1:
-                displayVoltage();
-                break;
-            case 2:
-                displayAh();
-                break;
-            case 3:
-                displayCurrent();
-                break;
-            case 4:
-                displayKm();
-                break;
-            case 5:
-                displayKmAbs();
-                break;
-            case 6:
-                displayTemp();
-                break;
-            default:
-                DisplayMode = 0;
-                break;
-        }
+    }
 
+    switch (DisplayMode) {
+        case 0:
+            DisplayShuffle();
+            break;
+        case 1:
+            displayVoltage();
+            break;
+        case 2:
+            displayAh();
+            break;
+        case 3:
+            displayCurrent();
+            break;
+        case 4:
+            displayKm();
+            break;
+        case 5:
+            displayKmAbs();
+            break;
+        case 6:
+            displayTemp();
+            break;
+        default:
+            DisplayMode = 0;
+            break;
     }
 }
 
