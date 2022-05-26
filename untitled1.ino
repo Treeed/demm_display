@@ -103,7 +103,7 @@ void loop() {
     if (1){//millis() - previousMillis > CYCLE_TIME) {
         previousMillis = millis();
         getState();
-        Backlighting();
+        //Backlighting();
         getData();
         SetTacho();
 
