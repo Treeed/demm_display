@@ -35,8 +35,9 @@ int button_state = 0;
 unsigned int DisplayMode = 0;
 unsigned long previousMillis = 0;
 unsigned long previousDisplayMillis = 0;
+unsigned long lastModeChangeMillis = 0;
 int DisplayIndex = 0;
-bool modeChange = true;
+bool displayChange = true;
 
 struct vesc_data {
     int Current;
@@ -160,9 +161,9 @@ void SetTacho() {
 }
 
 void displayAh() {
-    if ((vals.Ah != previousVals.Ah) or modeChange) {
+    if ((vals.Ah != previousVals.Ah) or displayChange) {
         previousVals.Ah = vals.Ah;
-        modeChange = false;
+        displayChange = false;
         oled.clear();
         oled.set2X();
         oled.print(vals.Ah);
@@ -173,9 +174,9 @@ void displayAh() {
     }
 }
 void displayVoltage() {
-    if ((vals.Voltage != previousVals.Voltage)  or modeChange) {
+    if ((vals.Voltage != previousVals.Voltage) or displayChange) {
         previousVals.Voltage = vals.Voltage;
-        modeChange = false;
+        displayChange = false;
         oled.clear();
         oled.set2X();
         oled.print(vals.Voltage);
@@ -184,9 +185,9 @@ void displayVoltage() {
 }
 
 void displayTemp() {
-    if ((vals.Temp != previousVals.Temp)  or modeChange) {
+    if ((vals.Temp != previousVals.Temp) or displayChange) {
         previousVals.Temp = vals.Temp;
-        modeChange = false;
+        displayChange = false;
         oled.clear();
         oled.set2X();
         oled.print(vals.Temp);
@@ -195,9 +196,9 @@ void displayTemp() {
 }
 
 void displayKm() {
-    if ((vals.Km != previousVals.Km)  or modeChange) {
+    if ((vals.Km != previousVals.Km) or displayChange) {
         previousVals.Km = vals.Km;
-        modeChange = false;
+        displayChange = false;
         oled.clear();
         oled.set2X();
         oled.print(vals.Km);
@@ -209,9 +210,9 @@ void displayKm() {
 }
 
 void displayKmAbs() {
-    if ((vals.KmAbs != previousVals.KmAbs)  or modeChange) {
+    if ((vals.KmAbs != previousVals.KmAbs) or displayChange) {
         previousVals.KmAbs = vals.KmAbs;
-        modeChange = false;
+        displayChange = false;
         oled.clear();
         oled.set1X();
         oled.println(vals.KmAbs + (unsigned int)vals.Km);
@@ -220,9 +221,9 @@ void displayKmAbs() {
 }
 
 void displayCurrent() {
-    if ((vals.Current != previousVals.Current) or modeChange) {
+    if ((vals.Current != previousVals.Current) or displayChange) {
         previousVals.Current = vals.Current;
-        modeChange = false;
+        displayChange = false;
         oled.clear();
         oled.set2X();
         oled.print(vals.Current);
@@ -230,11 +231,22 @@ void displayCurrent() {
     }
 }
 
+void displayShuffle() {
+    if(displayChange){
+        oled.clear();
+        oled.set2X();
+        oled.print("Shuffle");
+    }
+}
+
 void DisplayShuffle() {
     if (millis() - previousDisplayMillis > SHUFFLE_TIME) {
         previousDisplayMillis = millis();
-        modeChange = true;
-        if (DisplayIndex >= (MAX_STATE)) {
+        displayChange = true;
+        if (millis() - lastModeChangeMillis < 500){
+            DisplayIndex = -1;
+        }
+        else if (DisplayIndex >= (MAX_STATE)) {
             DisplayIndex = 0;
         }
         else {
@@ -242,6 +254,9 @@ void DisplayShuffle() {
         }
     }
     switch (DisplayIndex) {
+        case -1:
+            displayShuffle();
+            break;
         case 0:
             displayTemp();
             break;
@@ -270,13 +285,10 @@ void getState() {
     if (!digitalRead(BUTTON_PIN)) {
         if (button_state > 2) {
             button_state = 0;
-            modeChange = true;
+            displayChange = true;
+            lastModeChangeMillis = millis();
             if (DisplayMode == MAX_STATE) {
                 DisplayMode = 0;
-                oled.clear();
-                oled.set2X();
-                oled.print("Shuffle");
-                delay(500);
             }
             else {
                 DisplayMode++;
